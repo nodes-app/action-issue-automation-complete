@@ -1,0 +1,42 @@
+name: Finish Issue Automation Task
+description: 'Posts a status message and closes the issue'
+branding:
+  icon: check
+  color: green
+
+inputs:
+  token:
+    description: Personal Access Token
+    required: true
+  issue-number:
+    description: Issue Number
+    required: true
+    default: ${{ github.event.issue.number }}
+  success-message:
+    description: Success Message
+    required: true
+  error-message:
+    description: Error Message (empty if no error occurred)
+    required: true
+
+runs:
+  using: composite
+  steps:
+
+    - name: Comment & Close
+      shell: bash
+      env:
+        REPOSITORY: ${{ github.repository }}
+        ISSUE_NUMBER: ${{ inputs.issue-number }}
+        ERROR_MESSAGE: ${{ inputs.error-message }}
+        SUCCESS_MESSAGE: ${{ inputs.success-message }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+      run: |
+        if [ -z "$ERROR_MESSAGE" ]; then
+          comment="$SUCCESS_MESSAGE"
+        else
+          comment="$ERROR_MESSAGE"
+        fi
+        
+        gh issue comment $ISSUE_NUMBER --repo "$REPOSITORY" --body "$comment"
+        gh issue close $ISSUE_NUMBER --repo "$REPOSITORY"

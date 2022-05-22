@@ -1,0 +1,65 @@
+name: Test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      ISSUE_BODY: |
+        <!-- Required parameters are marked with an asterisk (*) -->
+
+        ### Foo *
+           
+        Hello, World!
+            
+        ### Bar
+            
+        Hello, Universe!
+    steps:
+      
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create Test Issue
+        id: create-test-issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          ISSUE_TITLE: Example
+        run: |
+          issue_number=$(
+            basename $(
+              gh issue create \
+                --repo nodes-app/action-issue-automation-finish \
+                --title "$ISSUE_TITLE" \
+                --body "$ISSUE_BODY"
+            )
+          )
+          echo "::set-output name=number::$issue_number"
+
+      - name: Finish Automated Task Successfully
+        uses: ./
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          issue-number: ${{ steps.create-test-issue.outputs.number }}
+          success-message: Success Message
+          error-message: ''
+
+      - name: Reopen Tese Issue
+        env:
+          ISSUE_NUMBER: ${{ steps.create-test-issue.outputs.number }}
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+        run: gh issue reopen $ISSUE_NUMBER --repo nodes-app/action-issue-automation-finish
+
+      - name: Finish Automated Task With Error
+        uses: ./
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          issue-number: ${{ steps.create-test-issue.outputs.number }}
+          success-message: Success Message
+          error-message: 'Error Message'
+
+      - name: Close Test Issue
+        if: always()
+        env:
+          ISSUE_NUMBER: ${{ steps.create-test-issue.outputs.number }}
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+        run: gh issue close $ISSUE_NUMBER --repo nodes-app/action-issue-automation-finish
