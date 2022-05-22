@@ -12,12 +12,9 @@ inputs:
     description: Issue Number
     required: true
     default: ${{ github.event.issue.number }}
-  success-message:
-    description: Success Message
-    required: true
-  error-message:
-    description: Error Message (empty if no error occurred)
-    required: true
+  message:
+    description: Message
+    required: false
 
 runs:
   using: composite
@@ -28,15 +25,11 @@ runs:
       env:
         REPOSITORY: ${{ github.repository }}
         ISSUE_NUMBER: ${{ inputs.issue-number }}
-        ERROR_MESSAGE: ${{ inputs.error-message }}
-        SUCCESS_MESSAGE: ${{ inputs.success-message }}
+        MESSAGE: ${{ inputs.message }}
         GITHUB_TOKEN: ${{ inputs.token }}
       run: |
-        if [ -z "$ERROR_MESSAGE" ]; then
-          comment="$SUCCESS_MESSAGE"
+        if [ ! -z "$MESSAGE" ]; then
+          gh issue comment $ISSUE_NUMBER --repo "$REPOSITORY" --body "$MESSAGE"
         else
-          comment="$ERROR_MESSAGE"
-        fi
         
-        gh issue comment $ISSUE_NUMBER --repo "$REPOSITORY" --body "$comment"
         gh issue close $ISSUE_NUMBER --repo "$REPOSITORY"
