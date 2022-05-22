@@ -30,6 +30,6 @@ runs:
       run: |
         if [ ! -z "$MESSAGE" ]; then
           gh issue comment $ISSUE_NUMBER --repo "$REPOSITORY" --body "$MESSAGE"
-        else
+        fi
         
         gh issue close $ISSUE_NUMBER --repo "$REPOSITORY"
